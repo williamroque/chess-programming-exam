@@ -1,6 +1,10 @@
 package chess;
 
+import chess.strategies.classic.*;
+
 import java.util.Collection;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Represents a single chess piece
@@ -9,34 +13,71 @@ import java.util.Collection;
  * signature of the existing methods.
  */
 public class ChessPiece {
+    private final ChessGame.TeamColor pieceColor;
+    private final ChessPiece.PieceType type;
+
+    private static final Map<ChessPiece.PieceType, ChessStrategy> strategyRegistry = Map.of(
+            PieceType.BISHOP, new BishopStrategy(),
+            PieceType.KING, new KingStrategy(),
+            PieceType.KNIGHT, new KnightStrategy(),
+            PieceType.PAWN, new PawnStrategy(),
+            PieceType.QUEEN, new QueenStrategy(),
+            PieceType.ROOK, new RookStrategy()
+    );
 
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
+        this.pieceColor = pieceColor;
+        this.type = type;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ChessPiece that = (ChessPiece) o;
+        return pieceColor == that.pieceColor && type == that.type;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pieceColor, type);
     }
 
     /**
      * The various different chess piece options
      */
     public enum PieceType {
-        KING,
-        QUEEN,
-        BISHOP,
-        KNIGHT,
-        ROOK,
-        PAWN
+        KING("K"),
+        QUEEN("Q"),
+        BISHOP("B"),
+        KNIGHT("N"),
+        ROOK("R"),
+        PAWN("P");
+
+        private final String shorthand;
+
+        PieceType(String s) {
+            this.shorthand = s;
+        }
+
+        public String getShorthand() {
+            return this.shorthand;
+        }
     }
 
     /**
      * @return Which team this chess piece belongs to
      */
     public ChessGame.TeamColor getTeamColor() {
-        throw new RuntimeException("Not implemented");
+        return this.pieceColor;
     }
 
     /**
      * @return which type of chess piece this piece is
      */
     public PieceType getPieceType() {
-        throw new RuntimeException("Not implemented");
+        return this.type;
     }
 
     /**
@@ -47,6 +88,6 @@ public class ChessPiece {
      * @return Collection of valid moves
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-        throw new RuntimeException("Not implemented");
+        return strategyRegistry.get(this.type).getValidMoves(board, myPosition, this.pieceColor);
     }
 }
